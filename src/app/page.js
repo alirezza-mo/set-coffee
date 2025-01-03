@@ -1,95 +1,40 @@
-import Image from 'next/image'
-import styles from './page.module.css'
+import Articles from '@/component/templates/index/articles/Articles'
+import Banner from '@/component/templates/index/banner/Banner'
+import Latest from '@/component/templates/index/latest/Latest'
+import Promote from '@/component/templates/index/promote/Promote'
+import Navbar from '@/component/modules/navbar/Navbar'
+import Footer from '@/component/modules/footer/Footer'
+import React from 'react'
+import { cookies } from 'next/headers'
+import { verifyAccessToken } from '@/utils/auth'
+import UserModel from '@/models/User'
+import connectToDB from '@/configs/db'
+import ProductModel from '@/models/Product'
 
-export default function Home() {
+
+async function page() {
+  connectToDB()
+  let user = null
+  const token =  cookies().get('token')  
+  if(token){
+    const tokenPayload = verifyAccessToken(token.value)
+    if(tokenPayload) {
+      user = await UserModel.findOne({email : tokenPayload.email})
+    }
+  }
+  const latestProducts = await ProductModel.find({}).sort({_id: -1}).limit(8)
+  console.log(latestProducts);
+  
   return (
-    <main className={styles.main}>
-      <div className={styles.description}>
-        <p>
-          Get started by editing&nbsp;
-          <code className={styles.code}>src/app/page.js</code>
-        </p>
-        <div>
-          <a
-            href="https://vercel.com?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            By{' '}
-            <Image
-              src="/vercel.svg"
-              alt="Vercel Logo"
-              className={styles.vercelLogo}
-              width={100}
-              height={24}
-              priority
-            />
-          </a>
-        </div>
-      </div>
-
-      <div className={styles.center}>
-        <Image
-          className={styles.logo}
-          src="/next.svg"
-          alt="Next.js Logo"
-          width={180}
-          height={37}
-          priority
-        />
-      </div>
-
-      <div className={styles.grid}>
-        <a
-          href="https://beta.nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className={styles.card}
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2>
-            Docs <span>-&gt;</span>
-          </h2>
-          <p>Find in-depth information about Next.js features and API.</p>
-        </a>
-
-        <a
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className={styles.card}
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2>
-            Learn <span>-&gt;</span>
-          </h2>
-          <p>Learn about Next.js in an interactive course with&nbsp;quizzes!</p>
-        </a>
-
-        <a
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className={styles.card}
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2>
-            Templates <span>-&gt;</span>
-          </h2>
-          <p>Explore the Next.js 13 playground.</p>
-        </a>
-
-        <a
-          href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className={styles.card}
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2>
-            Deploy <span>-&gt;</span>
-          </h2>
-          <p>
-            Instantly deploy your Next.js site to a shareable URL with Vercel.
-          </p>
-        </a>
-      </div>
-    </main>
+    <>
+      <Navbar isLogin = {user ? true : false} />
+      <Banner/>
+      <Latest products = {JSON.parse(JSON.stringify(latestProducts))}/>
+      <Promote/>
+      <Articles/>
+      <Footer/>
+    </>
   )
 }
+
+export default page
